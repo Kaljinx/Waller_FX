@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Scanner;
 
 public class App extends Application {
@@ -46,7 +47,7 @@ public class App extends Application {
         root.getChildren().addAll(toadd,blist,set);
         root.setAlignment(Pos.TOP_CENTER);
         toadd.setAlignment(Pos.CENTER);
-        load("C:/Users/shiva/IdeaProjects/Waller_FX/res/background/location.txt");
+        load("src/resources/imglocation.txt");
 
         select.setOnAction(event -> {
             try {
@@ -81,7 +82,7 @@ public class App extends Application {
 
         //Set
         set.setOnAction(event -> {
-            System.out.println(getline(2,file));
+            System.out.println("INCOMPLETE:");
         });
     }
     private void closefunction(){
@@ -94,7 +95,7 @@ public class App extends Application {
         blist.getItems().add(item);
     }
 
-    private String getline(int line, File f){
+    private String  getline(int line, File f){
         String st=null;
         try {
             Scanner fl = new Scanner(f);
@@ -138,11 +139,12 @@ public class App extends Application {
                     listadd(file.getName());
                 }
             }
-            System.out.println("File Loaded: "+location);
+            System.out.println("File Loaded: "+file.getAbsolutePath());
         }
         catch (FileNotFoundException e){System.out.println("File Does Not Exist: [load()]");}
         catch (NullPointerException e){ System.out.println("Nothing in file: [load()]"); }
         catch (IOException e){System.out.println("IOExeption: [load()]");}
+        catch (Exception e){e.printStackTrace(); System.out.println("Unknown Exeption [load[]]");}
     }
 
     public static void main(String[] args) {
