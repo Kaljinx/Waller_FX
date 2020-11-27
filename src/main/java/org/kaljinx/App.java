@@ -95,7 +95,7 @@ public class App extends Application {
     }
     private void closefunction(){
         boolean answer = ComfirmBox.display("Quit","Are you sure?");
-        if (answer){window.close();file.delete();tempfile.delete();}
+        if (answer){window.close();}
 
     }
 
