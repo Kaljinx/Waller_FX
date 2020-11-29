@@ -1,5 +1,6 @@
 package org.kaljinx;
 
+import com.sun.jna.win32.W32APIOptions;
 import javafx.application.Application;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -11,7 +12,13 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import com.sun.jna.Library;
+import com.sun.jna.Native;
+import com.sun.jna.Platform;
+
+
 import java.io.*;
+import java.security.cert.Extension;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
@@ -45,6 +52,8 @@ public class App extends Application {
         toadd.setAlignment(Pos.CENTER);
         bottom.setAlignment(Pos.CENTER);
         load("src/resources/imglocation.txt",true);
+        fc.setTitle("Find Wallpaper");
+        fc.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Image Files","*.png","*.jpg","*.jpeg"));
 
         select.setOnAction(event -> {
             try {
@@ -84,7 +93,7 @@ public class App extends Application {
         //Set
         set.setOnAction(event -> {
             System.out.println(getline(blist.getSelectionModel().getSelectedIndex(),file));
-            //changer.changedesktop(getline(blist.getSelectionModel().getSelectedIndex(),file));
+            changer(getline(blist.getSelectionModel().getSelectedIndex(),file));
         });
     }
     private void closefunction(){
@@ -190,6 +199,14 @@ public class App extends Application {
         catch (NullPointerException e){ System.out.println("Nothing in file: [load()]"); }
         catch (IOException e){System.out.println("IOExeption: [load()]");}
         catch (Exception e){e.printStackTrace(); System.out.println("Unknown Exeption [load()]");}
+    }
+
+    public static interface User32 extends Library {
+        User32 inst = (User32) Native.load("user32",User32.class, W32APIOptions.DEFAULT_OPTIONS);
+        boolean SystemParametersInfo(int uiAction,int uiPram,String pvParam,int fWinIni);
+    }
+    private void changer(String filepath){
+        User32.inst.SystemParametersInfo(0x0014,0,filepath,1);
     }
 
     public static void main(String[] args) {
