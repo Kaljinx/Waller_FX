@@ -14,11 +14,9 @@ import javafx.stage.Stage;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;
-import com.sun.jna.Platform;
 
 
 import java.io.*;
-import java.security.cert.Extension;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
@@ -51,7 +49,7 @@ public class App extends Application {
         root.setAlignment(Pos.TOP_CENTER);
         toadd.setAlignment(Pos.CENTER);
         bottom.setAlignment(Pos.CENTER);
-        load("src/resources/imglocation.txt",true);
+        load("imglocation.txt",true);
         fc.setTitle("Find Wallpaper");
         fc.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Image Files","*.png","*.jpg","*.jpeg"));
 
@@ -66,8 +64,8 @@ public class App extends Application {
         add.setOnAction(event -> {
             f = new File(fileinput.getText());
             if(f.exists()){
-                listadd(f.getName());
-                writefile(fileinput.getText(),file,true);
+                blist.getItems().add(f.getName());
+                writefile(fileinput.getText(),true,true);
             }
             else {
                 AlertBox.display("File Not Found","The File You Selected does not exist");
@@ -92,8 +90,8 @@ public class App extends Application {
 
         //Set
         set.setOnAction(event -> {
-            System.out.println(getline(blist.getSelectionModel().getSelectedIndex(),file));
-            changer(getline(blist.getSelectionModel().getSelectedIndex(),file));
+            System.out.println(getitem(blist.getSelectionModel().getSelectedIndex(),file));
+            changer(getitem(blist.getSelectionModel().getSelectedIndex(),file));
         });
     }
     private void closefunction(){
@@ -101,42 +99,25 @@ public class App extends Application {
         if (answer){window.close();}
 
     }
-
-    private void listadd(String item){
-        blist.getItems().add(item);
-    }
-
-    private String  getline(int line, File f){
+    private String getitem(int line, File f){
         String st=null;
         try {
-            Scanner fl = new Scanner(f);
-            int i = 0;
-            while (fl.hasNextLine()){
-                st = fl.nextLine();
-                if (i!=line&&!(fl.hasNextLine())){
-                   fl.nextLine();
-                }
-                if (i==line){
-                    break;
-                }
-                i=i+1;
-            }
-            fl.close();
+            BufferedReader br = new BufferedReader(new FileReader(f));
+            String[] storage = br.readLine().split("::");
+            st=storage[line];
         }
-        catch (FileNotFoundException e){
-            System.out.println("File Not Found");
-        }
+        catch (FileNotFoundException e){ System.out.println("File Not Found"); }
         catch (NoSuchElementException e){System.out.println("Line Does Not Exist");}
+        catch (IOException e) { e.printStackTrace(); }
         return st;
     }
 
-    private void writefile(String writing, File fl,boolean append){
+    private void writefile(String writing,boolean append,boolean splitter){
         try {
-            FileWriter writer = new FileWriter(fl,append);
-            writer.append(writing);
-            writer.append(nl);
+            FileWriter writer = new FileWriter("imglocation.txt",append);
+            if (splitter) writer.write(writing+"::");
+            else writer.write(writing);
             writer.close();
-            //System.out.println("Successfully wrote to the file. "+fl.getPath());
         } catch (IOException e) {
             System.out.println("An error occurred.");
             e.printStackTrace();
@@ -144,32 +125,15 @@ public class App extends Application {
     }
     private void delete(int line){
         try {
-            Scanner sc = new Scanner(file);
-            String store[] = new String[blist.getItems().size()];
-            store[0]=null;
-            int i=0;
-            while (sc.hasNextLine()&&i<blist.getItems().size()){
-                if (i==line){
-                    sc.nextLine();
-                }
-                if (sc.hasNextLine()){
-                    store[i]=sc.nextLine();
-                    i=i+1;
-                }
-            }
-            sc.close();
-            if (store[0]==null){
-                PrintWriter pw = new PrintWriter(file);
-                pw.close();
-            }
-            else {
-                writefile(store[0],file,false);
-                for (int j=1;j<store.length-1;j++){
-                    System.out.println(j+" : "+store[j]);
-                    writefile(store[j],file,true);
-                }
+            BufferedReader br = new BufferedReader(new FileReader("imglocation.txt"));
+            String[] storage = br.readLine().split("::");
+            for (String s : storage){
+                if (s==storage[0]){writefile("",false,false);}
+                if (s==storage[line]){continue;}
+                writefile(s,true,true);
             }
             blist.getItems().remove(line);
+
         }
         catch (FileNotFoundException e){System.out.println("File Does Not Exist: [delete()]");}
         catch (NullPointerException e){ System.out.println("Nothing in file: [delete()]"); }
@@ -179,17 +143,12 @@ public class App extends Application {
     private void load(String location,boolean startup){
         try {
             file = new File(location);
-            file.createNewFile();
-            file.setWritable(true);
-            file.setReadable(true);
             if (startup){
-                Scanner fl = new Scanner(file);
-                while (fl.hasNextLine()){
-                    String s = fl.nextLine();
-                    if (!(s.equals(""))){
-                        File file = new File(s);
-                        listadd(file.getName());
-                    }
+                BufferedReader fl = new BufferedReader(new FileReader(location));
+                String[] str = fl.readLine().split("::");
+                for (String i : str){
+                    File ld = new File(i);
+                    blist.getItems().add(ld.getName());
                 }
                 fl.close();
                 System.out.println("File Loaded: "+file.getAbsolutePath());
@@ -197,11 +156,10 @@ public class App extends Application {
         }
         catch (FileNotFoundException e){System.out.println("File Does Not Exist: [load()]");}
         catch (NullPointerException e){ System.out.println("Nothing in file: [load()]"); }
-        catch (IOException e){System.out.println("IOExeption: [load()]");}
         catch (Exception e){e.printStackTrace(); System.out.println("Unknown Exeption [load()]");}
     }
 
-    public static interface User32 extends Library {
+    public interface User32 extends Library {
         User32 inst = (User32) Native.load("user32",User32.class, W32APIOptions.DEFAULT_OPTIONS);
         boolean SystemParametersInfo(int uiAction,int uiPram,String pvParam,int fWinIni);
     }
